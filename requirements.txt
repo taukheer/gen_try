@@ -1,0 +1,6 @@
+openai
+streamlit
+nltk
+google-generativeai
+python-dotenv
+emoji
