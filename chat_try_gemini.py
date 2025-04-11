@@ -9,6 +9,19 @@ from collections import Counter
 from dotenv import load_dotenv
 import emoji
 
+import os
+
+# Get the current directory of the .py file
+current_dir = os.path.dirname(os.path.abspath(__file__))
+
+# Construct the path to the img folder
+img_folder = os.path.join(current_dir, "img")
+
+hitesh_image = os.path.join(img_folder, "hitesh.jpeg")
+piyush_image = os.path.join(img_folder, "piyush.jpg")
+donald_image = os.path.join(img_folder, "donald.jpg")
+
+
 
 # Constants
 HINDI_EXPRESSION_PROBABILITY = 0.2
@@ -30,10 +43,6 @@ try:
 except LookupError:
     nltk.download('vader_lexicon')
     nltk.download('punkt')
-
-# Load bot and user images
-bot_image = "bot_image.png"  # Replace with your bot image path
-user_image = "/img/hitesh.jpg" # Replace with your user image path
 
 # --- Helper Functions for Hitesh Style ---
 HINDI_EXPRESSIONS = [
@@ -144,18 +153,16 @@ def main():
     
     # Define profile information
     profiles = [
-        {"image": "C:/Users/taukh/Documents/github/gen/img/hitesh.jpeg", "name": "Hitesh Choudhary", "option": "Option 1: Hitesh Style"},
-        {"image": "C:/Users/taukh/Documents/github/gen/img/piyush.jpg", "name": "Piyush", "option": "Option 2: Piyush Style"},
-        {"image": "C:/Users/taukh/Documents/github/gen/img/donald.jpg", "name": "Donald", "option": "Option 3: Formal Style"}
+        {"image": hitesh_image, "name": "Hitesh Choudhary", "option": "Option 1: Hitesh Style"},
+        {"image": piyush_image, "name": "Piyush Garg", "option": "Option 2: Piyush Style"},
+        # {"image": "C:/Users/taukh/Documents/github/gen/img/donald.jpg", "name": "Donald", "option": "Option 3: Formal Style"}
     ]
     
     def get_mentor_name(option):
         if "Option 1" in option:
             return "Hitesh Choudhary"
         elif "Option 2" in option:
-            return "Piyush"
-        else:
-            return "Formal Mentor"
+            return "Piyush Garg"
     
     # Check if a mentor has been selected
     if st.session_state.option_selected:
@@ -169,8 +176,7 @@ def main():
             mentor_index = 0
         elif "Option 2" in st.session_state.option_selected:
             mentor_index = 1
-        else:
-            mentor_index = 2
+
             
         col1, col2 = st.columns([1, 3])
         with col1:
@@ -208,8 +214,6 @@ def main():
                         response = transform_to_hitesh_style(prompt, raw_content)
                     elif "Option 2" in st.session_state.option_selected:
                         response = transform_to_piyush_style(prompt, raw_content)
-                    else:
-                        response = transform_to_formal_style(prompt, raw_content)
                     
                     st.markdown(response)
                 
@@ -221,8 +225,8 @@ def main():
     
     else:
         # If no mentor selected, show the selection screen
-        st.title("Adaptive Chat with Chai with Code Mentors")
-        st.write("Welcome! Please select a mentor profile below:")
+        st.title("Chat with Chai with Code Mentors")
+        st.write("Welcome! Please select a mentor below:")
         
         # Create a 3-column layout for profile images
         col1, col2, col3 = st.columns(3)
@@ -247,16 +251,7 @@ def main():
                 st.session_state.last_greeting_index = -1
                 st.session_state.style_elements_used = set()
                 st.rerun()
-                
-        with col3:
-            st.image(profiles[2]["image"], width=200)
-            st.write(f"### {profiles[2]['name']}")
-            if st.button("Select Formal", key="btn_formal"):
-                st.session_state.option_selected = profiles[2]["option"]
-                st.session_state.messages = []
-                st.session_state.last_greeting_index = -1
-                st.session_state.style_elements_used = set()
-                st.rerun()
+
         
         # Display chat messages from history if there are any (unlikely in this state)
         st.divider()
@@ -412,7 +407,7 @@ def transform_to_hitesh_style(prompt, content):
     # For short queries without tech context, keep response simple but still conversational
     if is_short_query and not is_tech_question:
         # Add a bit of Hinglish flair even to short responses
-        prefixes = ["Haan, ", "Bilkul, ", "Dekhiye, ", "Acha, ", ""]
+        prefixes = ["Hanji, ", "Haan, ", "Bilkul, ", "Dekhiye, ", "Acha, ", ""]
         return random.choice(prefixes) + content
     
     # Split content for natural manipulation
