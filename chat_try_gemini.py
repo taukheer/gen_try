@@ -141,8 +141,8 @@ def main():
 
     # Mentor profiles
     profiles = [
-        {"image": hitesh_image, "name": "Hitesh Choudhary", "option": "Option 1: Hitesh Style"},
-        {"image": piyush_image, "name": "Piyush Garg", "option": "Option 2: Piyush Style"},
+        {"image": hitesh_image, "name": "Hitesh Choudhary", "option": "Option 1: Hitesh Style", "skills": "🧠 Expert in Full-Stack Development, DevOps, and YouTube-based Tech Education. Known for practical coding tutorials and startup insights."},
+        {"image": piyush_image, "name": "Piyush Garg", "option": "Option 2: Piyush Style", "skills": "💼 Specializes in Software Architecture, System Design, and Clean Code Practices. Mentors developers on building scalable applications."},
     ]
     
     def get_mentor_name(option):
@@ -195,22 +195,46 @@ def main():
     else:
         st.title("Chat with Chai with Code Mentors")
         st.write("Welcome! Please select a mentor below:")
-        col1, col2, col3 = st.columns(3)
+        col1, col2 = st.columns(2)
 
+        # --- Hitesh Choudhary ---
         with col1:
             st.image(profiles[0]["image"], width=200)
             st.write(f"### {profiles[0]['name']}")
+            st.markdown("""
+            **Skills & Expertise**
+            - **Programming Languages:** C++, JavaScript
+            - **Frontend:** React, Modern JS Frameworks
+            - **Backend:** Node.js, Express
+            - **Focus Areas:** Real-world projects, community teaching
+
+            _Hitesh specializes in hands-on programming tutorials in Hindi, blending real-world applications with strong community engagement._
+            """)
             if st.button("Select Hitesh", key="btn_hitesh"):
                 st.session_state.option_selected = profiles[0]["option"]
-                reset_chat(preserve_option=True)
+                st.session_state.messages = []
+                st.session_state.last_greeting_index = -1
+                st.session_state.style_elements_used = set()
                 st.rerun()
 
+        # --- Piyush Garg ---
         with col2:
             st.image(profiles[1]["image"], width=200)
             st.write(f"### {profiles[1]['name']}")
+            st.markdown("""
+            **Skills & Expertise**
+            - **Programming Languages:** JavaScript
+            - **Backend:** Node.js, AWS, Serverless
+            - **Tools:** Git, GitHub, DevOps fundamentals
+            - **Focus Areas:** Practical web development, cloud deployments
+
+            _Piyush creates beginner-friendly tutorials focused on real-world backend systems, version control, and cloud-based application development._
+            """)
             if st.button("Select Piyush", key="btn_piyush"):
                 st.session_state.option_selected = profiles[1]["option"]
-                reset_chat(preserve_option=True)
+                st.session_state.messages = []
+                st.session_state.last_greeting_index = -1
+                st.session_state.style_elements_used = set()
                 st.rerun()
 
         st.divider()
