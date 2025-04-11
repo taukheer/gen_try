@@ -65,6 +65,7 @@ def display_message(role, content, image_path=None):
             st.image(image_path, width=50)  # Adjust width as needed
         st.markdown(content)
 
+
 def main():
     # Set the page title and configure the layout
     st.set_page_config(page_title="Adaptive Chat with Google Gemini", layout="wide")
@@ -114,7 +115,7 @@ def main():
         # Model selection
         model = st.selectbox(
             "Select Gemini Model",
-            [ "gemini-1.5-pro", "gemini-1.5-flash"]
+            ["gemini-1.5-pro", "gemini-1.5-flash"]
         )
         
         # Temperature slider
@@ -140,66 +141,46 @@ def main():
             st.write(f"Uses Emojis: {'Yes' if metrics['emoji_usage'] > 0.3 else 'No'}")
             if metrics['top_topics']:
                 st.write(f"Top Topics: {', '.join(metrics['top_topics'][:3])}")
-
-    st.title("Adaptive Chat with Chai with Code Mentors")
-
-    # Only show the radio button if no option has been selected yet
-    if not st.session_state.option_selected:
-        st.write("Welcome! Please select one of the three options below:")
-        
-        option = st.radio(
-            "Choose an option:",
-            ["Option 1: Hitesh Style", "Option 2: Adaptive Style", "Option 3: Formal Style"],
-            index=None
-        )
-        
-        if option:
-            if st.button(f"Confirm {option}"):
-                st.session_state.option_selected = option
-                st.session_state.messages = []  # Clear any previous chat
-                # Reset style tracking
-                st.session_state.last_greeting_index = -1
-                st.session_state.style_elements_used = set()
-                st.rerun()  # Rerun the app to update the interface
     
-    # If an option is selected, show the chat interface
-    else:
-        option = st.session_state.option_selected
+    # Define profile information
+    profiles = [
+        {"image": "C:/Users/taukh/Documents/github/gen/img/hitesh.jpeg", "name": "Hitesh Choudhary", "option": "Option 1: Hitesh Style"},
+        {"image": "C:/Users/taukh/Documents/github/gen/img/piyush.jpg", "name": "Piyush", "option": "Option 2: Piyush Style"},
+        {"image": "C:/Users/taukh/Documents/github/gen/img/donald.jpg", "name": "Donald", "option": "Option 3: Formal Style"}
+    ]
+    
+    def get_mentor_name(option):
+        if "Option 1" in option:
+            return "Hitesh Choudhary"
+        elif "Option 2" in option:
+            return "Piyush"
+        else:
+            return "Formal Mentor"
+    
+    # Check if a mentor has been selected
+    if st.session_state.option_selected:
+        # Display chat interface with selected mentor
+        mentor_name = get_mentor_name(st.session_state.option_selected)
+        st.title(f"Chat with {mentor_name}")
         
-        # Show which option was selected with a way to reset
-        col1, col2 = st.columns([3, 1])
+        # Display mentor image and info
+        mentor_index = 0
+        if "Option 1" in st.session_state.option_selected:
+            mentor_index = 0
+        elif "Option 2" in st.session_state.option_selected:
+            mentor_index = 1
+        else:
+            mentor_index = 2
+            
+        col1, col2 = st.columns([1, 3])
         with col1:
-            if "Option 1" in option:
-                st.success(f"You selected: {option}")
-                st.caption("Responses will use content from Google Gemini in Hitesh's distinctive style")
-            elif "Option 2" in option:
-                st.info(f"You selected: {option}")
-                st.caption("Responses will use content from Google Gemini adapted to match your communication style")
-            else:
-                st.warning(f"You selected: {option}")
-                st.caption("Responses will use content from Google Gemini in a formal, professional style")
-        
+            st.image(profiles[mentor_index]["image"], width=100)
         with col2:
-            if st.button("Reset Selection"):
-                st.session_state.option_selected = None
-                st.session_state.messages = []
-                st.session_state.user_profile = {
-                    "topics": Counter(),
-                    "sentiment_history": [],
-                    "question_frequency": 0,
-                    "avg_message_length": 0,
-                    "message_count": 0,
-                    "technical_terms": Counter(),
-                    "formal_language": 0,
-                    "emoji_usage": 0,
-                }
-                # Reset style tracking
-                st.session_state.last_greeting_index = -1
-                st.session_state.style_elements_used = set()
-                st.rerun()
+            st.write(f"## You're chatting with {profiles[mentor_index]['name']}")
+            
+        st.divider()
         
         # Display chat messages from history
-        st.divider()
         for message in st.session_state.messages:
             with st.chat_message(message["role"]):
                 st.markdown(message["content"])
@@ -223,10 +204,10 @@ def main():
                     
                 # Transform the content based on selected option
                 with st.chat_message("assistant"):
-                    if "Option 1" in option:
+                    if "Option 1" in st.session_state.option_selected:
                         response = transform_to_hitesh_style(prompt, raw_content)
-                    elif "Option 2" in option:
-                        response = transform_to_adaptive_style(prompt, raw_content)
+                    elif "Option 2" in st.session_state.option_selected:
+                        response = transform_to_piyush_style(prompt, raw_content)
                     else:
                         response = transform_to_formal_style(prompt, raw_content)
                     
@@ -237,6 +218,51 @@ def main():
             
             except Exception as e:
                 st.error(f"Error communicating with Google Gemini: {str(e)}")
+    
+    else:
+        # If no mentor selected, show the selection screen
+        st.title("Adaptive Chat with Chai with Code Mentors")
+        st.write("Welcome! Please select a mentor profile below:")
+        
+        # Create a 3-column layout for profile images
+        col1, col2, col3 = st.columns(3)
+        
+        # Display profile images with clickable functionality
+        with col1:
+            st.image(profiles[0]["image"], width=200)
+            st.write(f"### {profiles[0]['name']}")
+            if st.button("Select Hitesh", key="btn_hitesh"):
+                st.session_state.option_selected = profiles[0]["option"]
+                st.session_state.messages = []
+                st.session_state.last_greeting_index = -1
+                st.session_state.style_elements_used = set()
+                st.rerun()
+                
+        with col2:
+            st.image(profiles[1]["image"], width=200)
+            st.write(f"### {profiles[1]['name']}")
+            if st.button("Select Piyush", key="btn_piyush"):
+                st.session_state.option_selected = profiles[1]["option"]
+                st.session_state.messages = []
+                st.session_state.last_greeting_index = -1
+                st.session_state.style_elements_used = set()
+                st.rerun()
+                
+        with col3:
+            st.image(profiles[2]["image"], width=200)
+            st.write(f"### {profiles[2]['name']}")
+            if st.button("Select Formal", key="btn_formal"):
+                st.session_state.option_selected = profiles[2]["option"]
+                st.session_state.messages = []
+                st.session_state.last_greeting_index = -1
+                st.session_state.style_elements_used = set()
+                st.rerun()
+        
+        # Display chat messages from history if there are any (unlikely in this state)
+        st.divider()
+        for message in st.session_state.messages:
+            with st.chat_message(message["role"]):
+                st.markdown(message["content"])
 
 def get_gemini_response(prompt, model_name, temperature):
     """Get a response from the Google Gemini API"""
@@ -354,201 +380,386 @@ def get_user_metrics():
     }
 
 def transform_to_hitesh_style(prompt, content):
+    """Transform content to Hitesh's natural Hinglish speaking style"""
+    # Detect basic context
     is_greeting = any(word in prompt.lower() for word in ["hello", "hi", "hey", "namaste"])
     is_tech_question = any(word in prompt.lower() for word in ["javascript", "js", "react", "code", "coding", "web", "html", "css", "programming"])
     is_short_query = len(prompt.split()) <= SHORT_QUERY_THRESHOLD
 
-    # Context-aware introduction selection
-    hitesh_intros = [
-        "Namaste friends! ",
-        "Hello everyone! ",
-        "What's up guys! ",
-        "Hey there! ",
-        "Aaj hum baat karenge ",
-        "Chalo shuru karte hain ",
-        ""  # Empty intro for some responses to sound more natural
-    ]
-    
-    # Track which Hindi expressions have been used recently
-    hindi_expressions = [
-        "Bilkul",
-        "Ekdum sahi",
-        "Bahut badhiya",
-        "Aap samajh rahe ho?",
-        "Dekho",
-        "Matlab",
-        "Aur ye important hai",
-        "Ye samajh lo",
-        "Dhyaan se suno"
-    ]
-    
-    # Choose introduction based on context
+    # Handle greetings with natural Hinglish responses
     if is_greeting:
-        # For greetings, pick a greeting response that hasn't been used recently
         greeting_responses = [
-            "Namaste! Kaise ho aap? ",
-            "Hanji! Kaise ho aap! ",
-            "Hey! Great to see you here! ",
-            "Hi there! Chai aur Code me aapka swagat hai! "
+            "Arrey bhai sahab! Namaste! Kaise ho aap? How can I help you today?",
+            "Hello bhai! Kya haal hai? Tell me, mai kaise help kar sakta hoon aapko?",
+            "Are waah! Aap aa gaye! Batao, kya help chahiye aapko?",
+            "Namaste dost! Chai pe charcha karte hain aaj. What's on your mind today?",
+            "Hello hello! Kya chal raha hai aaj? Tell me what you're interested in learning!"
         ]
         
         # Avoid using the same greeting twice in a row
         available_indexes = list(range(len(greeting_responses)))
-        if st.session_state.last_greeting_index in available_indexes:
+        if hasattr(st.session_state, 'last_greeting_index') and st.session_state.last_greeting_index in available_indexes:
             available_indexes.remove(st.session_state.last_greeting_index)
         
         greeting_index = random.choice(available_indexes)
         st.session_state.last_greeting_index = greeting_index
         
-        return greeting_responses[greeting_index] + "How can I help you today?"
+        return greeting_responses[greeting_index]
     
-    # For short queries, don't add style elements unless it's a tech question
+    if re.search(r'\bwho are you\b|\bwhat is your name\b|\bwho am i talking to\b', prompt.lower()):
+        return "Hello! I'm Hitesh Choudhary, a tech educator and content creator focused on web development and programming. I run the YouTube channel 'Chai aur Code' where I teach programming concepts in a simple, friendly style mixing Hindi and English. Mera goal hai coding ko simple banana, taki sab log seekh sake! How can I help you today?"
+    
+    # For short queries without tech context, keep response simple but still conversational
     if is_short_query and not is_tech_question:
-        return content
+        # Add a bit of Hinglish flair even to short responses
+        prefixes = ["Haan, ", "Bilkul, ", "Dekhiye, ", "Acha, ", ""]
+        return random.choice(prefixes) + content
     
-    # Get the first paragraph of content for the core information
+    # Split content for natural manipulation
     paragraphs = content.split('\n\n')
     main_content = paragraphs[0] if paragraphs else content
+    sentences = re.split(r'(?<=[.!?])\s+', main_content)
     
-    # For technical questions, use Hitesh's teaching style
+    # Tech-specific intros in authentic Hinglish
     if is_tech_question:
-        # Check what tech term was mentioned
-        tech_terms = ["javascript", "js", "react", "code", "coding", "web", "html", "css", "programming"]
-        mentioned_tech = next((term for term in tech_terms if term in prompt.lower()), None)
+        # Detect which tech is mentioned
+        tech_terms = {
+            "javascript": [
+                "JavaScript ke baare mein baat karte hain. Dekho, javascript actually ek bahut hi powerful language hai. ",
+                "Aaj hum javascript par focus karenge. Main personally javascript ko bahut pasand karta hoon kyunki ye versatile hai. ",
+                "JavaScript! Mere favorite topic mein se ek. Is language ko samajhna bahut zaroori hai aaj ke time mein. "
+            ],
+            "js": [
+                "JS ke baare mein baat karte hain. Dekho, javascript actually ek bahut hi powerful language hai. ",
+                "Aaj hum JS par focus karenge. Main personally JS ko bahut pasand karta hoon kyunki ye versatile hai. ",
+                "JS! Mere favorite topic mein se ek. Is language ko samajhna bahut zaroori hai aaj ke time mein. "
+            ],
+            "react": [
+                "React! Mera favorite framework hai ye. Dekho, ismein components ka concept hai jo life bahut aasan bana deta hai. ",
+                "Chalo aaj React ke baare mein baat karte hain. Main personally React se bahut saare projects banata hoon. ",
+                "React ka concept samajhte hain aaj. Dekho frontend development mein React ne revolution la diya hai. "
+            ],
+            "web": [
+                "Web development ki baat karte hain. Dekho, ismein teen cheezein important hain - HTML, CSS aur JavaScript. ",
+                "Web development! Meri expertise hai ye. Main batata hoon ki isme kya important hai. ",
+                "Web development ke liye mindset zaroori hai. Concepts clear hone chahiye, baaki sab aata rahega. "
+            ],
+            "html": [
+                "HTML yaani ki Hypertext Markup Language. Website ka skeleton hai ye! Isey samjhe bina aage nahi badh sakte. ",
+                "HTML ke baare mein baat karte hain. Dekho, ye web development ki building block hai. ",
+                "HTML simple hai lekin powerful bhi. Main personally har project mein semantic HTML use karta hoon. "
+            ],
+            "css": [
+                "CSS yaani ki Cascading Style Sheets. Iske bina website boring lagegi! Main batata hoon kaise use karna hai. ",
+                "CSS pe baat karte hain aaj. Flexbox aur Grid ab standard ban chuke hain industry mein. ",
+                "CSS ka concept simple hai - styling karna! Lekin ismein mastery hasil karna thoda challenging hai. "
+            ],
+            "python": [
+                "Python ek bahut hi simple language hai. Main khud ise bahut use karta hoon automations ke liye. ",
+                "Python ke baare mein baat karte hain. Ye data science, web development, har jagah use hoti hai. ",
+                "Python! Beginners ke liye perfect language. Syntax simple hai aur community bhi bahut helpful hai. "
+            ]
+        }
         
-        # Create a context-specific introduction
+        # Find which tech term was mentioned and use appropriate intro
+        mentioned_tech = next((term for term in tech_terms.keys() if term in prompt.lower()), None)
+        
         if mentioned_tech:
-            tech_specific_intros = {
-                "javascript": [
-                    f"JavaScript ek powerful language hai! ",
-                    f"Aaj hum JavaScript ke baare mein baat karenge. ",
-                    f"JavaScript fundamentals samajhna bahut zaroori hai. "
-                ],
-                "js": [
-                    f"JS ek versatile language hai! ",
-                    f"JS ko master karna chahte ho? Great! ",
-                    f"Aaj hum JS ke baare mein baat karenge. "
-                ],
-                "react": [
-                    f"React ek revolutionary frontend library hai! ",
-                    f"React ke saath development bahut maza aata hai. ",
-                    f"Aaj hum React ke baare mein baat karenge. "
-                ],
-                "web": [
-                    f"Web development mein sabse important hai fundamentals. ",
-                    f"Web ke liye aapko HTML, CSS aur JS teeno aani chahiye. ",
-                    f"Web development is all about practice! "
-                ],
-                "html": [
-                    f"HTML is the skeleton of every website! ",
-                    f"HTML ke bina web development possible hi nahi hai. ",
-                    f"Aaj hum HTML ke baare mein baat karenge. "
-                ],
-                "css": [
-                    f"CSS is what makes websites beautiful! ",
-                    f"CSS mein practice hi sabse zaroori hai. ",
-                    f"CSS ke baare mein aaj baat karenge. "
-                ]
-            }
-            
-            # Use specific intro or fallback to general coding intro
-            specific_intros = tech_specific_intros.get(mentioned_tech, [
-                "Coding ke liye mindset bahut zaroori hai. ",
-                "Programming sikhne ke liye consistency chahiye. ",
-                "As a developer, you need to understand core concepts first. "
-            ])
-            
-            intro = random.choice(specific_intros)
+            intro = random.choice(tech_terms[mentioned_tech])
         else:
-            # General tech intro
-            intro = random.choice([
-                "Tech world mein aage badhne ke liye concepts clear hone chahiye. ",
-                "Programming mein practice hi key hai. ",
-                "Development skills improve karne ke liye projects banao. "
-            ])
+            # General tech intro with natural Hinglish
+            general_tech_intros = [
+                "Dekho, programming mein sabse important cheez hai concepts clear hona. Mai hamesha kehta hoon practice karo, code likho, projects banao. ",
+                "Tech industry mein aage badhna hai toh fundamentals strong hone chahiye. Main personally har roz code likhta hoon, aap bhi try karo. ",
+                "Coding seekhna hai toh consistency zaroori hai. Main apne experience se bata raha hoon, daily thoda thoda practice karo. "
+            ]
+            intro = random.choice(general_tech_intros)
     else:
-        # Non-tech questions get a more generic intro
-        intro = random.choice(hitesh_intros)
+        # Non-tech questions get more casual, conversational intros
+        casual_intros = [
+            "Acha question hai ye! Main apne hisaab se batata hoon. ",
+            "Ye bahut interesting topic hai! Mere experience se bataun toh ",
+            "Haan, is baare mein baat karte hain. Maine bhi iske baare mein socha hai. ",
+            "Dekho, main isme expert nahi hoon, but jo mujhe pata hai wo share karta hoon. ",
+            "Ye question bahut baar pucha jaata hai! Main apna perspective share karta hoon. "
+        ]
+        intro = random.choice(casual_intros)
     
-    # Special styling for longer content
-    if len(main_content) > 300:
-        # Break up long content into segments
-        segments = re.split(r'(?<=[.!?])\s+', main_content)
-        
-        # Enhanced segments with Hitesh's style
-        enhanced_segments = []
-        
-        # Add intro
-        enhanced_segments.append(intro)
-        
-        # Only apply style elements to some segments (not all, to keep it natural)
-        for i, segment in enumerate(segments):
-            if not segment.strip():
-                continue
-                
-            # Skip very short segments
-            if len(segment.split()) < 3:
-                enhanced_segments.append(segment)
-                continue
+    # Process content to sound more natural in Hinglish
+    transformed_sentences = []
+    transformed_sentences.append(intro)
+    
+    # Pattern for inserting Hinglish phrases naturally
+    for i, sentence in enumerate(sentences):
+        if not sentence.strip():
+            continue
             
-            # Only apply style to selected segments (about 30%)
-            if random.random() < 0.3:
-                style_applied = False
-                
-                # Add Hindi expression (but not too frequently)
-                if random.random() < 0.2:
-                    # Choose an expression that hasn't been used recently
-                    available_expressions = [e for e in hindi_expressions if e not in st.session_state.style_elements_used]
-                    if not available_expressions:  # If all have been used, reset
-                        available_expressions = hindi_expressions
-                        st.session_state.style_elements_used = set()
-                    
-                    expression = random.choice(available_expressions)
-                    st.session_state.style_elements_used.add(expression)
-                    
-                    enhanced_segments.append(f"{expression}! {segment}")
-                    style_applied = True
-                
-                # Add tech emphasis for some segments
-                elif random.random() < 0.15 and is_tech_question:
-                    tech_emphasis = [
-                        "Ye concept industry mein bahut use hota hai. ",
-                        "Real projects mein aise hi kaam hota hai. ",
-                        "Interview mein ye zaroor puchha jata hai. "
-                    ]
-                    enhanced_segments.append(f"{segment} {random.choice(tech_emphasis)}")
-                    style_applied = True
-                    
-                if not style_applied:
-                    enhanced_segments.append(segment)
-            else:
-                enhanced_segments.append(segment)
+        # Skip very short sentences
+        if len(sentence.split()) < 3:
+            transformed_sentences.append(sentence)
+            continue
         
-        # Join the enhanced segments
-        result = " ".join(enhanced_segments)
-    else:
-        # For shorter content, apply light styling
-        result = f"{intro}{main_content}"
+        # Naturally insert Hindi expressions based on sentence position and content
+        if i == 0 or i % 3 == 0:  # Every few sentences add Hindi flavor
+            hinglish_patterns = [
+                # Agreement patterns
+                (r'\byes\b|correct|right|true', ["Bilkul sahi! ", "Haan ekdum! ", "Sahi baat hai! "]),
+                # Important point patterns
+                (r'\bimportant|crucial|key|essential', ["Ye bahut zaroori hai! ", "Dhyan rakhna ye important hai! ", "Ye point note kar lo! "]),
+                # Explanation patterns
+                (r'\bfor example|instance|such as', ["Jaise ki ", "Matlab ", "For example, "]),
+                # Conclusion patterns
+                (r'\bTherefore|Thus|So|Finally', ["Toh ismein ", "Iska matlab ", "Toh finally "]),
+            ]
+            
+            modified = False
+            for pattern, replacements in hinglish_patterns:
+                if re.search(pattern, sentence, re.IGNORECASE) and not modified:
+                    if random.random() < 0.7:  # 70% chance to apply pattern
+                        sentence = random.choice(replacements) + sentence
+                        modified = True
+            
+            # If no patterns matched but we still want Hindi flavor
+            if not modified and random.random() < 0.3:
+                hindi_fillers = [
+                    "Dekho, ",
+                    "Samjho, ",
+                    "Simple hai, ",
+                    "Asaan bhasha mein, ",
+                    "Main batata hoon, "
+                ]
+                sentence = random.choice(hindi_fillers) + sentence
+        
+        transformed_sentences.append(sentence)
+    
+    # Join the transformed sentences
+    result = " ".join(transformed_sentences)
     
     # Add remaining paragraphs
     if len(paragraphs) > 1:
         additional_content = '\n\n'.join(paragraphs[1:])
         result += f"\n\n{additional_content}"
     
-    # Sometimes add a Hitesh-style conclusion
-    if random.random() < 0.3 and not is_short_query:
+    # Add authentic Hinglish conclusions for larger responses
+    if len(result) > 300 and random.random() < 0.8:
         conclusions = [
-            "\n\nAur yaad rakhiye, practice is the key to success! Keep coding!",
-            "\n\nSo that's it for today! Aur koi sawal ho to comment section mein puchh sakte ho!",
-            "\n\nI hope yeh explanation clear hui! Agar aapko ye video helpful lagi to like zaroor karna!",
-            "\n\nAb aapko samajh mein aa gaya hoga. Keep coding, keep exploring, aur chai peete raho! ☕"
+            "\n\nToh dosto, yahi hai mere thoughts is topic pe. Practice karte raho, questions puchte raho!",
+            "\n\nAur yaad rakhiye, coding sikhne ke liye consistency zaroori hai. Thoda thoda karke seekho, lekin daily karo.",
+            "\n\nAb samajh mein aaya hoga aapko! Koi doubt ho toh puch lena, main explain kar dunga phir se.",
+            "\n\nBas yehi kehna chahta hoon main - concepts clear karo, practice karo, aur enjoy karo journey ko!",
+            "\n\nChalo dosto, aaj ke liye itna hi. Hope ye explanation helpful raha hoga. Keep coding and stay curious!",
+            "\n\nMaine apne experience se jo seekha hai, wahi share kiya hai. Ab aage aap khud explore karo aur apna perspective banaao."
         ]
         result += random.choice(conclusions)
     
-    # Add occasional emoji for emphasis, but not too many
-    if random.random() < 0.2 and "☕" not in result and "🔥" not in result:
-        emojis = ["🔥", "💻", "👨‍💻", "✅", "👍", "💡"]
+    # Add tech-specific motivation for programming questions
+    if is_tech_question and random.random() < 0.6:
+        tech_motivations = [
+            "\n\nYaad rakhna, har developer struggle karta hai shuru mein. Maine bhi kiya tha. Lekin consistent practice se sab aata hai!",
+            "\n\nMain personally kehta hoon ki tutorials se zyada projects pe kaam karo. Real learning projects se hi hoti hai.",
+            "\n\nDekho, tech industry mein ek cheez guarantee hai - change! Toh learning kabhi band mat karna, yehi success ka mantra hai.",
+            "\n\nAur haan, Stack Overflow aur documentation aapke best friends hain. Use them wisely!"
+        ]
+        result += random.choice(tech_motivations)
+    
+    # Add chai reference occasionally
+    if random.random() < 0.25:
+        chai_references = [
+            "\n\nChalo, ek cup chai peete hain aur code karte hain! ☕",
+            "\n\nAb thodi chai pee lo, dimag refresh karo, aur phir practice karna shuru karo! ☕",
+            "\n\nYe concepts samajhne ke liye chai zaroori hai! ☕ Chai with Code, yaad rakhna!",
+            "\n\nChai piyo, code karo, developer bano! ☕"
+        ]
+        result += random.choice(chai_references)
+    
+    # Occasionally add signature emoji but not too many
+    if "☕" not in result and random.random() < 0.3:
+        emojis = ["🔥", "💻", "👨‍💻", "✅", "🚀", "💪"]
         result = result.rstrip() + f" {random.choice(emojis)}"
+    
+    return result
+
+def transform_to_piyush_style(prompt, content):
+    """Transform content to Piyush Garg's natural Hinglish speaking style"""
+    # Detect basic context
+    is_greeting = any(word in prompt.lower() for word in ["hello", "hi", "hey", "namaste"])
+    is_tech_question = any(word in prompt.lower() for word in ["javascript", "js", "react", "node", "coding", "web", "programming"])
+    is_short_query = len(prompt.split()) <= SHORT_QUERY_THRESHOLD
+    
+    # Handle greetings with Piyush's style
+    if is_greeting:
+        greeting_responses = [
+            "Hello everybody! Kaise ho aap log? How can I help you today?",
+            "Hello bhai log! Hope sab badhiya hai! Tell me, how can I assist you?",
+            "Hello everyone! Aaj hum kya discuss karne wale hain?",
+            "Hello hello! Aap ka swagat hai! What's on your mind today?",
+            "Hello friends! Chaliye kuch interesting discuss karte hain aaj."
+        ]
+        
+        # Avoid using the same greeting twice
+        available_indexes = list(range(len(greeting_responses)))
+        if hasattr(st.session_state, 'last_greeting_index') and st.session_state.last_greeting_index in available_indexes:
+            available_indexes.remove(st.session_state.last_greeting_index)
+        
+        greeting_index = random.choice(available_indexes)
+        st.session_state.last_greeting_index = greeting_index
+        
+        return greeting_responses[greeting_index]
+    
+    if re.search(r'\bwho are you\b|\bwhat is your name\b|\bwho am i talking to\b', prompt.lower()):
+        return "Hello everyone! I'm Piyush Garg, a software developer and tech educator. I create programming tutorials and tech content on my YouTube channel where I explain complex concepts in a simple way. Mai hamesha kehta hoon fundamentals strong rakho! Let me know what you'd like to learn about today!"
+    
+    # For short queries without tech context, keep response simple but with Piyush's style
+    if is_short_query and not is_tech_question:
+        # Add a bit of Piyush's flair even to short responses
+        prefixes = ["Haan bhai, ", "Absolutely, ", "Dekhiye, ", "Haan, ", ""]
+        return random.choice(prefixes) + content
+    
+    # Split content for manipulation
+    paragraphs = content.split('\n\n')
+    main_content = paragraphs[0] if paragraphs else content
+    sentences = re.split(r'(?<=[.!?])\s+', main_content)
+    
+    # Tech-specific intros in Piyush's style
+    if is_tech_question:
+        # Detect which tech is mentioned
+        tech_terms = {
+            "javascript": [
+                "Javascript ke baare mein baat karte hain. Ye ek beautiful language hai, aur ye browser environment mein execute hoti hai. ",
+                "Let's talk about Javascript today. Mai personally javascript mein bahut saare projects karta hoon. ",
+                "Javascript ek amazing language hai. Ismein aap browser mein bhi code likh sakte ho aur backend mein bhi. "
+            ],
+            "js": [
+                "JS ke baare mein baat karte hain. Ye ek beautiful language hai, aur ye browser environment mein execute hoti hai. ",
+                "Let's talk about JS today. Mai personally JS mein bahut saare projects karta hoon. ",
+                "JS ek amazing language hai. Ismein aap browser mein bhi code likh sakte ho aur backend mein bhi. "
+            ],
+            "react": [
+                "React mein aap declarative way mein UI design karte ho. Components ka concept hai jo reusable hota hai. ",
+                "React actually Facebook ne develop kiya tha. Ye UI library hai jo Javascript ka power use karta hai. ",
+                "React mein virtual DOM concept hai jo performance ko improve karta hai. Let me explain you in detail. "
+            ],
+            "node": [
+                "Node.js actually Javascript ko browser se bahar leke aaya. Ye event-driven, non-blocking I/O model use karta hai. ",
+                "Node js ek runtime environment hai, jo Chrome ke V8 engine pe built hai. Ismein aap server-side code likh sakte ho. ",
+                "Node.js amazing hai backend ke liye. Ismein single thread pe multiple connections handle kar sakte ho. "
+            ],
+            "web": [
+                "Web development mein aapko HTML, CSS aur Javascript - ye teen technologies aani chahiye. ",
+                "Web development mein frontend aur backend dono important hai. Mai personally full stack development recommend karta hoon. ",
+                "Web development ek beautiful journey hai. Ismein learning kabhi khatam nahi hoti. "
+            ]
+        }
+        
+        # Find which tech term was mentioned
+        mentioned_tech = next((term for term in tech_terms.keys() if term in prompt.lower()), None)
+        
+        if mentioned_tech:
+            intro = random.choice(tech_terms[mentioned_tech])
+        else:
+            # General tech intro with Piyush's style
+            general_tech_intros = [
+                "Programming mein concepts important hain. Mai hamesha kehta hoon fundamentals strong rakho, baaki sab aata rahega. ",
+                "Software development mein problem solving skills matter karte hain. Mai recommend karta hoon DSA pe focus karo. ",
+                "Tech field mein growth ke liye consistency zaroori hai. Mai bhi daily practice karta hoon aur learn karta hoon. "
+            ]
+            intro = random.choice(general_tech_intros)
+    else:
+        # Non-tech questions get Piyush's casual style
+        casual_intros = [
+            "Acha question hai! Chaliye discuss karte hain. ",
+            "Interesting question hai ye! Mai aapko batata hoon. ",
+            "Let's talk about this. Mai apna perspective share karta hoon. ",
+            "Ye topic actually bahut interesting hai. Chaliye discuss karte hain. ",
+            "Good question! Mai iske baare mein apne thoughts share karta hoon. "
+        ]
+        intro = random.choice(casual_intros)
+    
+    # Process content to match Piyush's speaking style
+    transformed_sentences = []
+    transformed_sentences.append(intro)
+    
+    # Pattern for inserting Piyush's phrases
+    for i, sentence in enumerate(sentences):
+        if not sentence.strip():
+            continue
+            
+        # Skip very short sentences
+        if len(sentence.split()) < 3:
+            transformed_sentences.append(sentence)
+            continue
+        
+        # Naturally insert Piyush's expressions based on sentence position
+        if i == 0 or i % 4 == 0:  # Every few sentences add his flavor
+            piyush_patterns = [
+                # Emphasis patterns
+                (r'\bimportant|crucial|key|essential', ["Actually ye bahut important hai. ", "Ye point note kar lijiye. ", "This is very very important. "]),
+                # Example patterns
+                (r'\bfor example|instance|such as', ["For example, ", "Matlab, ", "Jaise ki, "]),
+                # Explanation patterns
+                (r'\bmeans|meaning|implies', ["Matlab ", "Iska matlab ", "Simply speaking, "]),
+                # Technical term patterns
+                (r'\bfunction|method|algorithm|api', ["Actually ye ", "Basically ye ", "In technical terms, ye "]),
+            ]
+            
+            modified = False
+            for pattern, replacements in piyush_patterns:
+                if re.search(pattern, sentence, re.IGNORECASE) and not modified:
+                    if random.random() < 0.7:  # 70% chance
+                        sentence = random.choice(replacements) + sentence
+                        modified = True
+            
+            # If no patterns matched but we still want his flavor
+            if not modified and random.random() < 0.3:
+                piyush_fillers = [
+                    "Let me tell you, ",
+                    "Basically, ",
+                    "Actually, ",
+                    "Simply put, ",
+                    "Let me explain, "
+                ]
+                sentence = random.choice(piyush_fillers) + sentence
+        
+        transformed_sentences.append(sentence)
+    
+    # Join the transformed sentences
+    result = " ".join(transformed_sentences)
+    
+    # Add remaining paragraphs
+    if len(paragraphs) > 1:
+        additional_content = '\n\n'.join(paragraphs[1:])
+        result += f"\n\n{additional_content}"
+    
+    # Add Piyush's signature conclusions
+    if len(result) > 300 and random.random() < 0.8:
+        conclusions = [
+            "\n\nToh basically yahi hai iske baare mein. I hope aapko ye samajh mein aaya hoga.",
+            "\n\nToh friends, ye tha aaj ka topic. Agar aapko kuch aur puchna hai toh feel free to ask.",
+            "\n\nToh basically yahi hai main concept. Practice karte raho aur grow karte raho.",
+            "\n\nSo I hope ye explanation clear tha. Koi doubts ho toh zaroor puchiye.",
+            "\n\nSo friends, ye tha aaj ka concept. Keep learning, keep growing!"
+        ]
+        result += random.choice(conclusions)
+    
+    # Add motivation for programming questions
+    if is_tech_question and random.random() < 0.6:
+        tech_motivations = [
+            "\n\nMai hamesha kehta hoon, projects banao. Real learning projects se hi hoti hai.",
+            "\n\nMai recommend karta hoon documentation padho aur practice karo. Consistency is the key!",
+            "\n\nTech field mein growth ke liye sirf watching tutorials enough nahi hai. Implement karo concepts ko.",
+            "\n\nRemember, programming sikhne ke liye best way hai - solving real problems."
+        ]
+        result += random.choice(tech_motivations)
+    
+    # Occasionally add Piyush's signature phrases
+    if random.random() < 0.3:
+        signatures = [
+            "\n\nHappy coding! 💻",
+            "\n\nKeep learning, keep growing! 🚀",
+            "\n\nBas practice karte raho, success milega! 💪",
+            "\n\nConsistency is the key to success! 🔑"
+        ]
+        result += random.choice(signatures)
     
     return result
 
@@ -728,6 +939,9 @@ def transform_to_formal_style(prompt, content):
     else:
         # For shorter content, just add the formal intro
         result = f"{intro}{main_content}"
+
+    if re.search(r'\bwho are you\b|\bwhat is your name\b|\bwho am i talking to\b', prompt.lower()):
+        return "I am a professional educator specializing in technology and programming instruction. My goal is to provide clear, thorough, and structured learning content to help you develop your technical skills. How may I assist with your educational needs today?"
     
     # Add remaining paragraphs
     if len(paragraphs) > 1:
