@@ -74,9 +74,7 @@ def display_message(role, content, image_path=None):
             st.image(image_path, width=50)  # Adjust width as needed
         st.markdown(content)
 
-
 def main():
-    # Set the page title and configure the layout
     st.set_page_config(page_title="Adaptive Chat with Google Gemini", layout="wide")
     
     # Initialize session state variables
@@ -98,14 +96,13 @@ def main():
             "emoji_usage": 0,
         }
     
-    # Track when greetings were last used to avoid repetition
     if "last_greeting_index" not in st.session_state:
         st.session_state.last_greeting_index = -1
         
     if "style_elements_used" not in st.session_state:
         st.session_state.style_elements_used = set()
     
-    # Set up Google Gemini API from environment variable
+    # Load API key
     api_key = os.getenv("GEMINI_API_KEY")
     if not api_key:
         st.error("GEMINI_API_KEY not found in environment variables. Please add it to your .env file.")
@@ -114,35 +111,21 @@ def main():
     # Configure Gemini API
     genai.configure(api_key=api_key)
     
-    # Set up the sidebar configuration
+    # --- SIDEBAR ---
     with st.sidebar:
         st.title("Google Gemini Configuration")
         st.success("✅ API Key loaded from environment variable")
         
         st.divider()
         
-        # Model selection
-        model = st.selectbox(
-            "Select Gemini Model",
-            ["gemini-1.5-pro", "gemini-1.5-flash"]
-        )
-        
-        # Temperature slider
-        temperature = st.slider(
-            "Temperature",
-            min_value=0.0,
-            max_value=1.0,
-            value=0.7,
-            step=0.1,
-            help="Higher values make output more random, lower values make it more deterministic"
-        )
+        model = st.selectbox("Select Gemini Model", ["gemini-1.5-pro", "gemini-1.5-flash"])
+        temperature = st.slider("Temperature", 0.0, 1.0, 0.7, 0.1)
         
         st.divider()
         
-        # User profile metrics display (if available)
         if st.session_state.user_profile["message_count"] > 0:
             st.subheader("User Profile Metrics")
-            metrics = get_user_metrics()
+            metrics = get_user_metrics()  # Assumes this is defined elsewhere
             st.write(f"Avg Sentiment: {metrics['avg_sentiment']:.2f}")
             st.write(f"Technical Language: {metrics['technical_ratio']:.2f}")
             st.write(f"Formality Level: {metrics['formal_language']:.2f}")
@@ -150,12 +133,16 @@ def main():
             st.write(f"Uses Emojis: {'Yes' if metrics['emoji_usage'] > 0.3 else 'No'}")
             if metrics['top_topics']:
                 st.write(f"Top Topics: {', '.join(metrics['top_topics'][:3])}")
-    
-    # Define profile information
+
+        # 🔄 Reset button in sidebar
+        if st.button("🔄 Reset Chat"):
+            reset_chat()
+            st.rerun()
+
+    # Mentor profiles
     profiles = [
         {"image": hitesh_image, "name": "Hitesh Choudhary", "option": "Option 1: Hitesh Style"},
         {"image": piyush_image, "name": "Piyush Garg", "option": "Option 2: Piyush Style"},
-        # {"image": "C:/Users/taukh/Documents/github/gen/img/donald.jpg", "name": "Donald", "option": "Option 3: Formal Style"}
     ]
     
     def get_mentor_name(option):
@@ -163,101 +150,93 @@ def main():
             return "Hitesh Choudhary"
         elif "Option 2" in option:
             return "Piyush Garg"
-    
-    # Check if a mentor has been selected
+
     if st.session_state.option_selected:
-        # Display chat interface with selected mentor
         mentor_name = get_mentor_name(st.session_state.option_selected)
         st.title(f"Chat with {mentor_name}")
         
-        # Display mentor image and info
-        mentor_index = 0
-        if "Option 1" in st.session_state.option_selected:
-            mentor_index = 0
-        elif "Option 2" in st.session_state.option_selected:
-            mentor_index = 1
-
-            
+        # 👉 Reset button in top-right corner
+        top_col1, top_col2, top_col3 = st.columns([6, 1, 1])
+        with top_col3:
+            if st.button("🔄 Reset"):
+                reset_chat()
+                st.rerun()
+        
+        mentor_index = 0 if "Option 1" in st.session_state.option_selected else 1
         col1, col2 = st.columns([1, 3])
         with col1:
             st.image(profiles[mentor_index]["image"], width=100)
         with col2:
             st.write(f"## You're chatting with {profiles[mentor_index]['name']}")
-            
         st.divider()
         
-        # Display chat messages from history
         for message in st.session_state.messages:
             with st.chat_message(message["role"]):
                 st.markdown(message["content"])
         
-        # Accept user input
         if prompt := st.chat_input("What would you like to talk about?"):
-            # Analyze user input and update profile
-            analyze_user_input(prompt)
-            
-            # Add user message to chat history
+            analyze_user_input(prompt)  # Assumes this function is defined
             st.session_state.messages.append({"role": "user", "content": prompt})
-            
-            # Display user message in chat message container
             with st.chat_message("user"):
                 st.markdown(prompt)
-            
-            # Get raw content from Google Gemini
             try:
                 with st.spinner("Getting response from Google Gemini..."):
-                    raw_content = get_gemini_response(prompt, model, temperature)
-                    
-                # Transform the content based on selected option
+                    raw_content = get_gemini_response(prompt, model, temperature)  # Assumes this function is defined
                 with st.chat_message("assistant"):
                     if "Option 1" in st.session_state.option_selected:
                         response = transform_to_hitesh_style(prompt, raw_content)
                     elif "Option 2" in st.session_state.option_selected:
                         response = transform_to_piyush_style(prompt, raw_content)
-                    
                     st.markdown(response)
-                
-                # Add assistant response to chat history
                 st.session_state.messages.append({"role": "assistant", "content": response})
-            
             except Exception as e:
                 st.error(f"Error communicating with Google Gemini: {str(e)}")
-    
+
     else:
-        # If no mentor selected, show the selection screen
         st.title("Chat with Chai with Code Mentors")
         st.write("Welcome! Please select a mentor below:")
-        
-        # Create a 3-column layout for profile images
         col1, col2, col3 = st.columns(3)
-        
-        # Display profile images with clickable functionality
+
         with col1:
             st.image(profiles[0]["image"], width=200)
             st.write(f"### {profiles[0]['name']}")
             if st.button("Select Hitesh", key="btn_hitesh"):
                 st.session_state.option_selected = profiles[0]["option"]
-                st.session_state.messages = []
-                st.session_state.last_greeting_index = -1
-                st.session_state.style_elements_used = set()
+                reset_chat(preserve_option=True)
                 st.rerun()
-                
+
         with col2:
             st.image(profiles[1]["image"], width=200)
             st.write(f"### {profiles[1]['name']}")
             if st.button("Select Piyush", key="btn_piyush"):
                 st.session_state.option_selected = profiles[1]["option"]
-                st.session_state.messages = []
-                st.session_state.last_greeting_index = -1
-                st.session_state.style_elements_used = set()
+                reset_chat(preserve_option=True)
                 st.rerun()
 
-        
-        # Display chat messages from history if there are any (unlikely in this state)
         st.divider()
         for message in st.session_state.messages:
             with st.chat_message(message["role"]):
                 st.markdown(message["content"])
+
+# 🔧 Utility function to reset chat
+def reset_chat(preserve_option=False):
+    if not preserve_option:
+        st.session_state.option_selected = None
+    st.session_state.messages = []
+    st.session_state.last_greeting_index = -1
+    st.session_state.style_elements_used = set()
+    st.session_state.user_profile = {
+        "topics": Counter(),
+        "sentiment_history": [],
+        "question_frequency": 0,
+        "avg_message_length": 0,
+        "message_count": 0,
+        "technical_terms": Counter(),
+        "formal_language": 0,
+        "emoji_usage": 0,
+    }
+
+
 
 def get_gemini_response(prompt, model_name, temperature):
     """Get a response from the Google Gemini API"""
